@@ -1,41 +1,51 @@
-// Webpack v4
-const path = require('path');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
+const path = require("path");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const devMode = process.env.NODE_ENV !== "production";
 module.exports = {
-  entry: { main: './src/index.js' },
+  entry: "./src/index.js",
+  mode: "development",
   output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: 'main.js'
+    filename: "./main.js",
+    chunkFilename: "[name].bundle.js"
   },
+  devServer: {
+    contentBase: path.join(__dirname, "dist"),
+    compress: true,
+    port: 9000,
+    watchContentBase: true,
+    progress: true
+  },
+  plugins: [
+    new MiniCssExtractPlugin({
+      filename: "[name].css",
+      chunkFilename: "[id].css"
+    })
+  ],
   module: {
     rules: [
       {
-        test: /\.js$/,
-        exclude: /node_modules/,
+        test: /\.m?js$/,
+        exclude: /(node_modules|bower_components)/,
         use: {
           loader: "babel-loader"
         }
       },
       {
         test: /\.css$/,
-        use: ExtractTextPlugin.extract(
+        use: [
+          devMode ? "style-loader" : MiniCssExtractPlugin.loader,
           {
-            fallback: 'style-loader',
-            use: ['css-loader', 'sass-loader']
-          })
+            loader: "css-loader",
+            options: {
+              modules: true
+            }
+          }
+        ]
+      },
+      {
+        test: /\.(png|svg|jpg|gif)$/,
+        use: ["file-loader"]
       }
     ]
-  },
-  plugins: [ 
-    new ExtractTextPlugin(
-      {filename: 'style.css'}
-    ),
-    new HtmlWebpackPlugin({
-      inject: false,
-      hash: true,
-      template: './src/index.html',
-      filename: 'index.html'
-    })
-  ]
+  }
 };
